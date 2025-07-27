@@ -829,4 +829,205 @@
       }
 
       // Diet and nutrition
-      if (msg.includes('diet') || msg.includes('nutrition') ||
+      if (msg.includes('diet') || msg.includes('nutrition')) {
+        return '🥗 For a balanced diet: Include fruits, vegetables, lean proteins, whole grains, and healthy fats. Limit processed foods, sugar, and salt. Would you like a personalized meal plan or tips for a specific condition?';
+      }
+
+      // Exercise
+      if (msg.includes('exercise') || msg.includes('workout') || msg.includes('fitness')) {
+        return '🏃 Regular exercise is key! Aim for at least 150 minutes of moderate activity per week. Mix cardio, strength, and flexibility. Would you like a beginner routine or tips for exercising with a health condition?';
+      }
+
+      // Lab results
+      if (msg.includes('lab') || msg.includes('test result') || msg.includes('blood work')) {
+        return '🔬 I can help interpret common lab results. Please provide the test name and value. For official interpretation, always consult your healthcare provider. Would you like general info on a specific test?';
+      }
+
+      // Water intake
+      if (msg.includes('water') || msg.includes('hydration')) {
+        return '💧 Staying hydrated is important! Aim for 8 glasses (about 2 liters) per day, more if active or in hot weather. Would you like reminders to drink water?';
+      }
+
+      // Sleep
+      if (msg.includes('sleep') || msg.includes('insomnia') || msg.includes('rest')) {
+        return '😴 Good sleep hygiene: Keep a regular schedule, avoid screens before bed, limit caffeine, create a restful environment. Adults need 7-9 hours. Trouble sleeping? I can suggest relaxation techniques.';
+      }
+
+      // Heart rate
+      if (msg.includes('heart rate') || msg.includes('pulse')) {
+        return '❤️ Normal resting heart rate for adults is 60-100 BPM. Factors like fitness, stress, and medication can affect it. Would you like tips to improve heart health?';
+      }
+
+      // Mood
+      if (msg.includes('mood') || msg.includes('feeling') || msg.includes('emotion')) {
+        return '😊 Tracking your mood helps with mental wellness. Would you like to log your mood or get tips for emotional health?';
+      }
+
+      // Greetings
+      if (msg.includes('hello') || msg.includes('hi') || msg.includes('hey')) {
+        return '👋 Hello! How can I assist you with your health today?';
+      }
+
+      // Thanks
+      if (msg.includes('thank')) {
+        return '🙏 You\'re welcome! I\'m here whenever you need health support.';
+      }
+
+      // Fallback
+      return '🤖 I\'m here to help with health questions, symptoms, appointments, and more. Could you please provide more details or specify your request?';
+    }
+
+    // Quick Actions
+    function quickAction(type) {
+      let message = '';
+      switch(type) {
+        case 'symptoms':
+          message = 'I want to check my symptoms.';
+          break;
+        case 'appointment':
+          message = 'I want to book an appointment.';
+          break;
+        case 'medication':
+          message = 'I need help with my medication.';
+          break;
+        case 'emergency':
+          message = 'This is an emergency!';
+          break;
+        case 'diet':
+          message = 'Can you suggest a diet plan?';
+          break;
+        case 'exercise':
+          message = 'Give me some exercise tips.';
+          break;
+        case 'mental':
+          message = 'I need mental health support.';
+          break;
+        case 'lab':
+          message = 'Help me understand my lab results.';
+          break;
+        default:
+          message = 'I need assistance.';
+      }
+      document.getElementById('user-input').value = message;
+      sendMessage();
+    }
+
+    // Mood Tracker
+    function setMood(mood) {
+      currentMood = mood;
+      const buttons = document.querySelectorAll('.mood-btn');
+      buttons.forEach((btn, idx) => {
+        btn.classList.toggle('selected', idx === mood - 1);
+      });
+      showToast('Mood logged! Thank you for sharing.');
+    }
+
+    // Health Stats (simulate updates)
+    function updateHealthStats() {
+      // Simulate random changes
+      healthStats.waterIntake = Math.min(8, healthStats.waterIntake + (Math.random() > 0.5 ? 1 : 0));
+      healthStats.stepsToday += Math.floor(Math.random() * 50);
+      healthStats.heartRate = 65 + Math.floor(Math.random() * 15);
+
+      document.getElementById('water-intake').textContent = `${healthStats.waterIntake}/8 glasses`;
+      document.getElementById('steps-today').textContent = healthStats.stepsToday.toLocaleString();
+      document.getElementById('heart-rate').textContent = `${healthStats.heartRate} BPM`;
+    }
+
+    // Medication Reminder
+    function showMedicationReminder() {
+      document.getElementById('medication-widget').style.display = 'block';
+    }
+    function dismissReminder() {
+      document.getElementById('medication-widget').style.display = 'none';
+      showToast('Medication marked as taken!');
+    }
+
+    // Toast Notification
+    function showToast(msg) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    // Theme Toggle
+    function toggleTheme() {
+      document.body.classList.toggle('dark');
+      const themeText = document.getElementById('theme-text');
+      themeText.textContent = document.body.classList.contains('dark') ? 'Light Mode' : 'Dark Mode';
+    }
+
+    // Export Chat
+    function exportChat() {
+      let text = '';
+      chatLog.forEach(entry => {
+        const time = new Date(entry.timestamp).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+        text += `[${time}] ${entry.sender === 'user' ? 'You' : 'CareBot'}: ${entry.message}\n`;
+      });
+      const blob = new Blob([text], {type: 'text/plain'});
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'carebot_chat.txt';
+      a.click();
+    }
+
+    // Clear Chat
+    function clearChat() {
+      document.getElementById('chat-box').innerHTML = '';
+      chatLog = [];
+      updateTimestamp();
+      showToast('Chat cleared!');
+    }
+
+    // Typing Indicator
+    function showTypingIndicator() {
+      document.getElementById('typing-indicator').classList.add('show');
+    }
+    function hideTypingIndicator() {
+      document.getElementById('typing-indicator').classList.remove('show');
+    }
+
+    // Voice Input (placeholder)
+    function toggleVoiceInput() {
+      const btn = document.getElementById('voice-btn');
+      if (!('webkitSpeechRecognition' in window)) {
+        showToast('Voice input not supported in this browser.');
+        return;
+      }
+      if (!isRecording) {
+        // Start recording
+        isRecording = true;
+        btn.classList.add('recording');
+        btn.textContent = '🎤 Listening...';
+        const recognition = new webkitSpeechRecognition();
+        recognition.lang = 'en-US';
+        recognition.interimResults = false;
+        recognition.maxAlternatives = 1;
+        recognition.onresult = function(event) {
+          const transcript = event.results[0][0].transcript;
+          document.getElementById('user-input').value = transcript;
+          sendMessage();
+        };
+        recognition.onend = function() {
+          isRecording = false;
+          btn.classList.remove('recording');
+          btn.textContent = '🎤 Voice Input';
+        };
+        recognition.onerror = function() {
+          isRecording = false;
+          btn.classList.remove('recording');
+          btn.textContent = '🎤 Voice Input';
+          showToast('Voice input error.');
+        };
+        recognition.start();
+      } else {
+        // Stop recording
+        isRecording = false;
+        btn.classList.remove('recording');
+        btn.textContent = '🎤 Voice Input';
+      }
+    }
+  </script>
+</body>
+</html>
