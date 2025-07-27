@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CareBot AI Pro - Advanced Healthcare Assistant</title>
+  <style>
+    :root {
+      --primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --secondary: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --info: #3b82f6;
+      --bg-light: #f8fafc;
+      --bg-dark: #0f172a;
+      --text-light: #f1f5f9;
+      --text-dark: #1e293b;
+      --glass: rgba(255, 255, 255, 0.25);
+      --glass-dark: rgba(15, 23, 42, 0.25);
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Inter', 'Segoe UI', system-ui, sans-serif;
+      background: var(--bg-light);
+      color: var(--text-dark);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      min-height: 100vh;
+      position: relative;
+    }
+
+    body.dark {
+      background: var(--bg-dark);
+      color: var(--text-light);
+    }
+
+    .floating-shapes {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: -1;
+    }
+
+    .shape {
+      position: absolute;
+      border-radius: 50%;
+      opacity: 0.1;
+      animation: float 20s infinite linear;
+    }
+
+    .shape:nth-child(1) { width: 80px; height: 80px; background: var(--success); top: 20%; left: 10%; animation-delay: 0s; }
+    .shape:nth-child(2) { width: 60px; height: 60px; background: var(--info); top: 60%; left: 80%; animation-delay: 5s; }
+    .shape:nth-child(3) { width: 100px; height: 100px; background: var(--warning); top: 80%; left: 20%; animation-delay: 10s; }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0px) rotate(0deg); }
+      33% { transform: translateY(-30px) rotate(120deg); }
+      66% { transform: translateY(20px) rotate(240deg); }
+    }
+
+    header {
+      background: var(--primary);
+      color: white;
+      padding: 2rem 1rem;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    header::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100" fill="white" opacity="0.1"><path d="M0,0 C150,100 350,0 500,50 C650,100 850,0 1000,50 L1000,0 Z"/></svg>');
+      background-size: cover;
+    }
+
+    .header-content {
+      position: relative;
+      z-index: 1;
+    }
+
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+      background: linear-gradient(45deg, #fff, #e2e8f0);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 1.1rem;
+      opacity: 0.9;
+      font-weight: 300;
+    }
+
+    .main-container {
+      max-width: 1200px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+      display: grid;
+      grid-template-columns: 1fr 300px;
+      gap: 2rem;
+    }
+
+    @media (max-width: 768px) {
+      .main-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+      overflow: hidden;
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    body.dark .chat-container {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .chat-header {
+      background: var(--primary);
+      color: white;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: between;
+      align-items: center;
+    }
+
+    .status-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
+    .chat-box {
+      height: 400px;
+      overflow-y: auto;
+      padding: 1rem;
+      background: linear-gradient(to bottom, #f8fafc, #f1f5f9);
+      scrollbar-width: thin;
+      scrollbar-color: var(--success) transparent;
+    }
+
+    body.dark .chat-box {
+      background: linear-gradient(to bottom, #1e293b, #0f172a);
+    }
+
+    .chat-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    .chat-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    .chat-box::-webkit-scrollbar-thumb {
+      background: var(--success);
+      border-radius: 3px;
+    }
+
+    .message {
+      margin: 1rem 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .avatar {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: bold;
+      flex-shrink: 0;
+    }
+
+    .bot-avatar {
+      background: var(--primary);
+      color: white;
+    }
+
+    .user-avatar {
+      background: var(--secondary);
+      color: white;
+    }
+
+    .message-content {
+      max-width: 70%;
+      padding: 0.75rem 1rem;
+      border-radius: 18px;
+      position: relative;
+      word-wrap: break-word;
+    }
+
+    .bot .message-content {
+      background: white;
+      color: var(--text-dark);
+      border: 1px solid #e2e8f0;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    body.dark .bot .message-content {
+      background: rgba(30, 41, 59, 0.8);
+      color: var(--text-light);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .user .message-content {
+      background: var(--primary);
+      color: white;
+    }
+
+    .timestamp {
+      font-size: 0.7rem;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+
+    .input-container {
+      padding: 1rem 1.5rem;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+    }
+
+    body.dark .input-container {
+      background: rgba(15, 23, 42, 0.8);
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .input-area {
+      display: flex;
+      gap: 0.5rem;
+      align-items: flex-end;
+    }
+
+    .input-field {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border: 2px solid #e2e8f0;
+      border-radius: 25px;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      resize: none;
+      min-height: 20px;
+      max-height: 100px;
+      font-family: inherit;
+    }
+
+    .input-field:focus {
+      outline: none;
+      border-color: var(--success);
+      box-shadow: 0 0 0 3px rgba(16,185,129,0.1);
+    }
+
+    body.dark .input-field {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text-light);
+    }
+
+    .send-btn {
+      padding: 0.75rem 1.5rem;
+      background: var(--primary);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .send-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(102,126,234,0.3);
+    }
+
+    .send-btn:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .sidebar {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .widget {
+      background: white;
+      border-radius: 15px;
+      padding: 1.5rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
+    }
+
+    body.dark .widget {
+      background: rgba(15, 23, 42, 0.8);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .widget h3 {
+      margin-bottom: 1rem;
+      color: var(--success);
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+
+    .quick-actions {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.5rem;
+    }
+
+    .quick-btn {
+      padding: 0.75rem;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      background: white;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+      font-size: 0.85rem;
+      font-weight: 500;
+    }
+
+    body.dark .quick-btn {
+      background: rgba(30, 41, 59, 0.8);
+      border-color: rgba(255,255,255,0.2);
+      color: var(--text-light);
+    }
+
+    .quick-btn:hover {
+      border-color: var(--success);
+      background: rgba(16,185,129,0.1);
+      transform: translateY(-1px);
+    }
+
+    .health-stats {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+
+    .stat-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem;
+      background: #f8fafc;
+      border-radius: 8px;
+      border-left: 4px solid var(--success);
+    }
+
+    body.dark .stat-item {
+      background: rgba(30, 41, 59, 0.5);
+    }
+
+    .stat-value {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    .mood-tracker {
+      display: flex;
+      justify-content: space-between;
+      margin-top: 1rem;
+    }
+
+    .mood-btn {
+      width: 40px;
+      height: 40px;
+      border: none;
+      border-radius: 50%;
+      font-size: 1.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .mood-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .mood-btn.selected {
+      transform: scale(1.3);
+      box-shadow: 0 0 15px rgba(0,0,0,0.3);
+    }
+
+    .typing-indicator {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 1rem;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+
+    .typing-indicator.show {
+      opacity: 1;
+    }
+
+    .typing-dots {
+      display: flex;
+      gap: 4px;
+    }
+
+    .typing-dots span {
+      width: 8px;
+      height: 8px;
+      background: var(--success);
+      border-radius: 50%;
+      animation: typing 1.4s infinite ease-in-out;
+    }
+
+    .typing-dots span:nth-child(1) { animation-delay: 0s; }
+    .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+    .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+    @keyframes typing {
+      0%, 60%, 100% { transform: translateY(0); }
+      30% { transform: translateY(-10px); }
+    }
+
+    .emergency-btn {
+      background: var(--danger) !important;
+      color: white !important;
+      font-weight: 600;
+      animation: emergencyPulse 2s infinite;
+    }
+
+    @keyframes emergencyPulse {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); }
+      50% { box-shadow: 0 0 20px 10px rgba(239, 68, 68, 0.2); }
+    }
+
+    .controls {
+      display: flex;
+      justify-content: center;
+      gap: 1rem;
+      margin: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .control-btn {
+      padding: 0.75rem 1.5rem;
+      border: 2px solid var(--success);
+      border-radius: 25px;
+      background: white;
+      color: var(--success);
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.3s ease;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .control-btn:hover {
+      background: var(--success);
+      color: white;
+      transform: translateY(-2px);
+      box-shadow: 0 8px 25px rgba(16,185,129,0.3);
+    }
+
+    body.dark .control-btn {
+      background: rgba(15, 23, 42, 0.8);
+      color: var(--text-light);
+      border-color: rgba(255,255,255,0.3);
+    }
+
+    .toast {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 1rem 1.5rem;
+      background: var(--success);
+      color: white;
+      border-radius: 10px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.2);
+      transform: translateX(400px);
+      transition: transform 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateX(0);
+    }
+
+    .medication-reminder {
+      background: var(--warning);
+      padding: 1rem;
+      border-radius: 10px;
+      margin: 1rem 0;
+      color: white;
+      text-align: center;
+      animation: reminderPulse 3s infinite;
+    }
+
+    @keyframes reminderPulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+
+    .voice-btn {
+      background: var(--info) !important;
+      border-color: var(--info) !important;
+    }
+
+    .voice-btn.recording {
+      background: var(--danger) !important;
+      border-color: var(--danger) !important;
+      animation: pulse 1s infinite;
+    }
+  </style>
+</head>
+<body>
+  <div class="floating-shapes">
+    <div class="shape"></div>
+    <div class="shape"></div>
+    <div class="shape"></div>
+  </div>
+
+  <header>
+    <div class="header-content">
+      <h1>🏥 CareBot AI Pro</h1>
+      <p class="subtitle">Your Advanced AI Healthcare Companion</p>
+    </div>
+  </header>
+
+  <div class="controls">
+    <button class="control-btn" onclick="toggleTheme()">
+      🌓 <span id="theme-text">Dark Mode</span>
+    </button>
+    <button class="control-btn" onclick="exportChat()">
+      📥 Export Chat
+    </button>
+    <button class="control-btn" onclick="clearChat()">
+      🗑️ Clear Chat
+    </button>
+    <button class="control-btn voice-btn" onclick="toggleVoiceInput()" id="voice-btn">
+      🎤 Voice Input
+    </button>
+  </div>
+
+  <div class="main-container">
+    <div class="chat-container">
+      <div class="chat-header">
+        <div>
+          <div style="font-weight: 600; font-size: 1.1rem;">CareBot AI Pro</div>
+          <div class="status-indicator">
+            <div class="status-dot"></div>
+            Online & Ready
+          </div>
+        </div>
+      </div>
+      
+      <div class="chat-box" id="chat-box">
+        <div class="message bot">
+          <div class="avatar bot-avatar">🤖</div>
+          <div class="message-content">
+            <div>Hello! I'm CareBot AI Pro, your advanced healthcare assistant. I can help with symptoms analysis, medication reminders, appointment scheduling, health tips, and emergency assistance. How can I help you today?</div>
+            <div class="timestamp" id="bot-time"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="typing-indicator" id="typing-indicator">
+        <div class="avatar bot-avatar">🤖</div>
+        <div>
+          <span>CareBot is thinking</span>
+          <div class="typing-dots">
+            <span></span><span></span><span></span>
+          </div>
+        </div>
+      </div>
+
+      <div class="input-container">
+        <div class="input-area">
+          <textarea 
+            id="user-input" 
+            class="input-field" 
+            placeholder="Describe your symptoms or ask me anything about health..."
+            rows="1"
+          ></textarea>
+          <button class="send-btn" onclick="sendMessage()" id="send-btn">
+            <span>Send</span> ✈️
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <div class="sidebar">
+      <div class="widget">
+        <h3>🚀 Quick Actions</h3>
+        <div class="quick-actions">
+          <button class="quick-btn" onclick="quickAction('symptoms')">💊 Symptoms Check</button>
+          <button class="quick-btn" onclick="quickAction('appointment')">📅 Book Appointment</button>
+          <button class="quick-btn" onclick="quickAction('medication')">💉 Medication</button>
+          <button class="quick-btn emergency-btn" onclick="quickAction('emergency')">🚨 Emergency</button>
+          <button class="quick-btn" onclick="quickAction('diet')">🥗 Diet Plan</button>
+          <button class="quick-btn" onclick="quickAction('exercise')">🏃 Exercise Tips</button>
+          <button class="quick-btn" onclick="quickAction('mental')">🧠 Mental Health</button>
+          <button class="quick-btn" onclick="quickAction('lab')">🔬 Lab Results</button>
+        </div>
+      </div>
+
+      <div class="widget">
+        <h3>📊 Health Stats</h3>
+        <div class="health-stats">
+          <div class="stat-item">
+            <span>Water Intake</span>
+            <span class="stat-value" id="water-intake">6/8 glasses</span>
+          </div>
+          <div class="stat-item">
+            <span>Steps Today</span>
+            <span class="stat-value" id="steps-today">7,234</span>
+          </div>
+          <div class="stat-item">
+            <span>Sleep Quality</span>
+            <span class="stat-value" id="sleep-quality">Good</span>
+          </div>
+          <div class="stat-item">
+            <span>Heart Rate</span>
+            <span class="stat-value" id="heart-rate">72 BPM</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="widget">
+        <h3>😊 Mood Tracker</h3>
+        <p style="font-size: 0.9rem; margin-bottom: 1rem;">How are you feeling today?</p>
+        <div class="mood-tracker">
+          <button class="mood-btn" onclick="setMood(1)" style="background: #ef4444;">😢</button>
+          <button class="mood-btn" onclick="setMood(2)" style="background: #f59e0b;">😐</button>
+          <button class="mood-btn" onclick="setMood(3)" style="background: #eab308;">🙂</button>
+          <button class="mood-btn" onclick="setMood(4)" style="background: #22c55e;">😊</button>
+          <button class="mood-btn" onclick="setMood(5)" style="background: #10b981;">😄</button>
+        </div>
+      </div>
+
+      <div class="widget" id="medication-widget" style="display: none;">
+        <div class="medication-reminder">
+          <h4>💊 Medication Reminder</h4>
+          <p>Time to take your medication!</p>
+          <button onclick="dismissReminder()" style="margin-top: 0.5rem; padding: 0.5rem 1rem; border: none; background: white; border-radius: 5px; cursor: pointer;">Taken ✓</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script>
+    let chatLog = [];
+    let isRecording = false;
+    let currentMood = null;
+    let healthStats = {
+      waterIntake: 6,
+      stepsToday: 7234,
+      sleepQuality: 'Good',
+      heartRate: 72
+    };
+
+    // Initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      updateTimestamp();
+      setInterval(updateHealthStats, 30000); // Update every 30 seconds
+      setInterval(showMedicationReminder, 1800000); // Show every 30 minutes
+      
+      // Auto-resize textarea
+      const input = document.getElementById('user-input');
+      input.addEventListener('input', function() {
+        this.style.height = 'auto';
+        this.style.height = this.scrollHeight + 'px';
+      });
+
+      // Enter key to send
+      input.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendMessage();
+        }
+      });
+    });
+
+    function updateTimestamp() {
+      const now = new Date();
+      const timeString = now.toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      document.getElementById('bot-time').textContent = timeString;
+    }
+
+    function sendMessage() {
+      const input = document.getElementById('user-input');
+      const message = input.value.trim();
+      if (!message) return;
+
+      addMessage('user', message);
+      chatLog.push({sender: 'user', message: message, timestamp: new Date()});
+      input.value = '';
+      input.style.height = 'auto';
+
+      showTypingIndicator();
+      setTimeout(() => {
+        hideTypingIndicator();
+        const response = generateAdvancedResponse(message.toLowerCase());
+        addMessage('bot', response);
+        chatLog.push({sender: 'bot', message: response, timestamp: new Date()});
+      }, Math.random() * 2000 + 1000);
+    }
+
+    function addMessage(sender, message) {
+      const chatBox = document.getElementById('chat-box');
+      const messageDiv = document.createElement('div');
+      messageDiv.className = `message ${sender}`;
+      
+      const avatar = document.createElement('div');
+      avatar.className = `avatar ${sender}-avatar`;
+      avatar.textContent = sender === 'bot' ? '🤖' : '👤';
+      
+      const content = document.createElement('div');
+      content.className = 'message-content';
+      
+      const text = document.createElement('div');
+      text.textContent = message;
+      
+      const timestamp = document.createElement('div');
+      timestamp.className = 'timestamp';
+      timestamp.textContent = new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+      
+      content.appendChild(text);
+      content.appendChild(timestamp);
+      messageDiv.appendChild(avatar);
+      messageDiv.appendChild(content);
+      
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function generateAdvancedResponse(msg) {
+      // Emergency keywords
+      if (msg.includes('emergency') || msg.includes('urgent') || msg.includes('911') || msg.includes('help')) {
+        return '🚨 EMERGENCY PROTOCOL ACTIVATED: I\'m immediately connecting you to emergency services. Stay calm. If this is life-threatening, call 911 now. I\'ve also alerted nearby medical facilities. What\'s your current location?';
+      }
+
+      // Symptom analysis
+      if (msg.includes('fever') || msg.includes('temperature')) {
+        return '🌡️ Fever detected. Please monitor your temperature every 2 hours. Take paracetamol if above 101°F. Stay hydrated and rest. If fever persists over 3 days or reaches 103°F, seek immediate medical attention. Would you like me to schedule a telemedicine consultation?';
+      }
+
+      if (msg.includes('headache') || msg.includes('migraine')) {
+        return '🧠 For headaches: Try resting in a dark, quiet room. Apply cold compress to forehead. Stay hydrated. Avoid screens. If this is a sudden, severe headache unlike any before, seek immediate medical care. Scale of 1-10, how would you rate the pain?';
+      }
+
+      if (msg.includes('chest pain') || msg.includes('heart')) {
+        return '❤️ IMPORTANT: Chest pain can be serious. If you experience crushing pain, shortness of breath, nausea, or pain radiating to arm/jaw, call 911 immediately. For mild discomfort, avoid physical activity and monitor symptoms. Should I connect you to a cardiologist?';
+      }
+
+      if (msg.includes('cough') || msg.includes('cold')) {
+        return '🤧 For cough/cold symptoms: Rest, stay hydrated, use humidifier, try warm salt water gargles. Monitor for fever, difficulty breathing, or worsening symptoms. If cough persists over 2 weeks or you have breathing difficulties, consult a doctor.';
+      }
+
+      // Mental health
+      if (msg.includes('anxious') || msg.includes('anxiety') || msg.includes('stressed')) {
+        return '🧘 I understand you\'re feeling anxious. Try: Deep breathing (4-7-8 technique), progressive muscle relaxation, grounding exercises (5-4-3-2-1 method). Remember, it\'s okay to feel this way. Would you like me to guide you through a breathing exercise or connect you with mental health resources?';
+      }
+
+      if (msg.includes('sad') || msg.includes('depressed') || msg.includes('down')) {
+        return '💙 I\'m here for you. Feeling sad is valid. Consider: gentle exercise, connecting with loved ones, maintaining routine, getting sunlight. If feelings persist or you have thoughts of self-harm, please reach out to a mental health professional immediately. Would you like me to find local resources?';
+      }
+
+      // Medication queries
+      if (msg.includes('medication') || msg.includes('pills') || msg.includes('prescription')) {
+        return '💊 Medication assistance: Always take as prescribed, check expiration dates, be aware of side effects, never share medications. Do you need help setting up reminders, checking interactions, or have questions about a specific medication?';
+      }
+
+      // Appointment scheduling
+      if (msg.includes('appointment') || msg.includes('doctor') || msg.includes('schedule')) {
+        return '📅 I can help schedule appointments! Available options: General practitioner, Specialist consultations, Lab tests, Telemedicine, Urgent care. What type of appointment do you need? I can check availability and send you booking options.';
+      }
+
+      // Diet and nutrition
+      if (msg.includes('diet') || msg.includes('nutrition') ||
